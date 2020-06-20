@@ -48,25 +48,4 @@ for filename in os.listdir("./cogs"):
     if filename.endswith('.py'):
         client.load_extension(f'cogs.{filename[:-3]}')
 
-# @client.command()
-# async def poll(ctx, question, *options):
-#     count = 0
-#     description = []
-#     reactions = ['1⃣', '2⃣', '3⃣', '4⃣', '5⃣']
-#     for option in options:
-#         description += '\n {} {}'.format(reactions[count], option)
-#         count += 1
-#     embed = discord.Embed(title=question, description=''.join(description))
-#     # if len(options) == 2 and "yes" in options and "no" in options:
-#     #     count = 0
-#     #     description = []
-#     #     reactions = ['✅', '❌']
-#
-#     react_message = await ctx.send(embed=embed)
-#
-#     for reaction in reactions[:len(options)]:
-#         await react_message.add_reaction(reaction)
-
-
-
 client.run(os.environ["DISCORD_API_TOKEN"])
