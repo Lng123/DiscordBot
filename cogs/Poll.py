@@ -11,7 +11,6 @@ class Poll(commands.Cog):
     def __init__(self, client):
         self.client = client
         self.options = []
-        # self.events = []
         self.current = None
         self.reactions = ['1⃣', '2⃣', '3⃣', '4⃣', '5⃣']
         self.event = None
@@ -63,7 +62,7 @@ class Poll(commands.Cog):
             description += '\n {} {}'.format(self.reactions[count], option)
             count += 1
         print(description)
-        embed = discord.Embed(title=self.event.get_title_poll,
+        embed = discord.Embed(title=self.event.get_title_poll(),
                               description=''.join(description))
         message = await ctx.send(embed=embed)
         for reaction in self.reactions[:len(poll_options)]:
@@ -99,7 +98,7 @@ class Poll(commands.Cog):
         for i, j in options.items():
             if i in max_keys:
                 winners.append(j)
-        await self.showResults(ctx, winners)
+        await self.show_results(ctx, winners)
 
     @commands.command()
     async def count_votes_manual(self, ctx, poll_id):
@@ -127,18 +126,20 @@ class Poll(commands.Cog):
         for i, j in options.items():
             if i in max_keys:
                 winners.append(j)
-        await self.showResults(ctx, winners)
+        await self.show_results(ctx, winners)
 
-    async def showResults(self, ctx, winners):
+    async def show_results(self, ctx, winners):
 
         if len(winners) > 1:
-            print("Its a tie")
+            ctx.send("Its a tie")
         else:
             self.event.set_winner(winners[0])
+            print(winners[0])
+            print(self.event.get_winner())
             embed = discord.Embed(title="Poll finished",
-                                  description=self.event.get_winner())
+                                  description=self.event.get_title_results())
             await ctx.send(embed=embed)
-        await self.set_alarm(ctx)
+        await self.set_reminder(ctx)
 
     @commands.command()
     async def set_reminder(self, ctx):
@@ -152,7 +153,6 @@ class Poll(commands.Cog):
         print(datetime.now())
         print(timedelta(0, 10))
         curr = datetime.now() + timedelta(0, 10)
-
         print(curr)
         print(alarm)
         # diff = datetime.strptime(curr)
@@ -161,13 +161,11 @@ class Poll(commands.Cog):
         diff = (t1 - t2).total_seconds()
         print(diff)
         time.sleep(diff)
-        await ctx.send("setting time")
-        # s = sched.scheduler(time.perf_counter, time.sleep)
-        # # args = (ctx.message("now"))
-        # s.enter(10, 1, self.test , ctx)
-        # print("entered")
-        # s.run()
-        # self.client.loop.create_task(self.set_alarm())
+        print("reminder")
+        print(self.event.get_title_results())
+        embed = discord.Embed(title="Reminder",
+                              description=self.event.get_title_results())
+        await ctx.send(embed=embed)
 # Have a timer that automatically scores the polls, then clears the poll
 # Have an optional arg for the id for manual execution
 # Set alarm for lunch
