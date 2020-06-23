@@ -8,17 +8,17 @@ class Yelp:
         self.api_key = os.environ["YELP_API_TOKEN"]
         self.headers = {'Authorization': 'Bearer %s' % self.api_key}
 
-    def business_search(self):
+    def business_search(self, term):
         url = "https://api.yelp.com/v3/businesses/search"
-        params = {'term': 'seafood', 'location': 'Vancouver, BC'}
+        params = {'term': term, 'location': 'Vancouver, BC'}
         req = requests.get(url, params=params,
                            headers=self.headers)
         print('The status code is {}'.format(req.status_code))
 
         return json.loads(req.text)
 
-    def id_search(self, id):
-        url = f"https://api.yelp.com/v3/businesses/{id}"
+    def id_search(self, bus_id):
+        url = f"https://api.yelp.com/v3/businesses/{bus_id}"
         req = requests.get(url, headers=self.headers)
         print('The status code is {}'.format(req.status_code))
 
@@ -50,10 +50,10 @@ class Yelp:
         }
         return bus_info
 
-    
+
 def main():
     yelp = Yelp()
-    req = yelp.business_search()
+    req = yelp.business_search("seafood")
     # yelp.jprint(req)
     # yelp.jprint(yelp.get_info(req))
     id_req = yelp.id_search("gt1BSfVFvzI-qHdJ3LUZug")
