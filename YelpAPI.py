@@ -2,7 +2,9 @@ import requests
 import json
 import os
 
-
+"""
+Uses the yelp api to grab yelp information
+"""
 class Yelp:
     def __init__(self):
         self.api_key = os.environ["YELP_API_TOKEN"]

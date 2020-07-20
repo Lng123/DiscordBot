@@ -1,12 +1,16 @@
-import discord
-from discord.ext import commands
 import sys
 sys.path.insert(0, '../')
+import discord
+from discord.ext import commands
 from EventTopic import Lunch
 import time
 from datetime import datetime, timedelta
+from YelpAPI import Yelp
 
 
+"""
+Handles the polling.
+"""
 class Poll(commands.Cog):
     def __init__(self, client):
         self.client = client
@@ -14,7 +18,11 @@ class Poll(commands.Cog):
         self.current = None
         self.reactions = ['1⃣', '2⃣', '3⃣', '4⃣', '5⃣']
         self.event = None
+        self.yelp = Yelp()
 
+    """
+    Creates a new poll object.
+    """
     @commands.command()
     async def create_poll(self, ctx, poll):
         if poll.lower() == "lunch":
@@ -23,6 +31,9 @@ class Poll(commands.Cog):
         else:
             await ctx.send("Not a valid poll type")
 
+    """
+    Adds an poll option.
+    """
     @commands.command()
     async def add_option(self, ctx, *options):
         if (len(options) + len(self.options)) > len(self.reactions):
@@ -30,9 +41,12 @@ class Poll(commands.Cog):
                            f"{len.options}")
         else:
             for option in options:
+
                 if option not in self.options:
                     self.options.append(option)
-
+    """
+    Removes a poll option.
+    """
     @commands.command()
     async def del_option(self, ctx, option):
         if option in self.options:
@@ -41,11 +55,17 @@ class Poll(commands.Cog):
         else:
             await ctx.send(f"{option} does not exist")
 
+    """
+    Display the options
+    """
     @commands.command()
     async def show_options(self, ctx):
         option_str = " ".join(self.options)
         await ctx.send(f"{option_str}")
 
+    """
+    Poll the chat
+    """
     @commands.command()
     async def poll(self, ctx, *options):
         if self.event is None:
@@ -72,6 +92,9 @@ class Poll(commands.Cog):
         self.event.set_id(message.id)
         # self.events.append(lunch)
 
+    """
+    Fetches the embeded poll, counts the votes, and calls show results.
+    """
     @commands.command()
     async def count_votes(self, ctx):
         votes = {}
@@ -100,6 +123,9 @@ class Poll(commands.Cog):
                 winners.append(j)
         await self.show_results(ctx, winners)
 
+    """
+    Counts the votes using the poll id
+    """
     @commands.command()
     async def count_votes_manual(self, ctx, poll_id):
         votes = {}
@@ -128,8 +154,10 @@ class Poll(commands.Cog):
                 winners.append(j)
         await self.show_results(ctx, winners)
 
+    """
+    Display the winner as an embed.
+    """
     async def show_results(self, ctx, winners):
-
         if len(winners) > 1:
             ctx.send("Its a tie")
         else:
@@ -141,6 +169,9 @@ class Poll(commands.Cog):
             await ctx.send(embed=embed)
         await self.set_reminder(ctx)
 
+    """
+    Sets the reminder for lunch
+    """
     @commands.command()
     async def set_reminder(self, ctx):
         if self.event is None:
@@ -166,9 +197,12 @@ class Poll(commands.Cog):
         embed = discord.Embed(title="Reminder",
                               description=self.event.get_title_results())
         await ctx.send(embed=embed)
+
+
 # Have a timer that automatically scores the polls, then clears the poll
 # Have an optional arg for the id for manual execution
 # Set alarm for lunch
 # Title, description
+
 def setup(client):
     client.add_cog(Poll(client))
