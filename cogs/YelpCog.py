@@ -12,9 +12,9 @@ class YelpCog(commands.Cog):
         self.yelp = Yelp()
 
     @commands.command()
-    async def yelp_business_name(self, ctx, term):
+    async def yelp_business_name(self, ctx, *term):
         description = []
-        req = self.yelp.business_search(term)
+        req = self.yelp.business_search(" ".join(term))
         businesses = self.yelp.get_info(req)
         for info in businesses:
             description += '\n {} - Yelp ID:{}'.format(info["name"],

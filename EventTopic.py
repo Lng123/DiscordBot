@@ -20,7 +20,7 @@ class EventTopic:
 
 
 class Lunch(EventTopic):
-    def __init__(self, alarm_time="20:47"):
+    def __init__(self, alarm_time="18:00"):
         super().__init__()
         self.alarm_time = alarm_time
         self.title_poll = f"Lunch poll for " \

@@ -6,6 +6,7 @@ from EventTopic import Lunch
 import time
 from datetime import datetime, timedelta
 from YelpAPI import Yelp
+import re
 
 
 """
@@ -44,6 +45,16 @@ class Poll(commands.Cog):
 
                 if option not in self.options:
                     self.options.append(option)
+
+    @commands.command()
+    async def add_yelp(self, ctx, option):
+        if len(option) != 22:
+            await ctx.send("not a valid yelp business id")
+        else:
+            req = self.yelp.id_search(option)
+            business = self.yelp.parse_business(req)
+            if business not in self.options:
+                self.options.append(business)
     """
     Removes a poll option.
     """
@@ -61,6 +72,7 @@ class Poll(commands.Cog):
     @commands.command()
     async def show_options(self, ctx):
         option_str = " ".join(self.options)
+        print(option_str)
         await ctx.send(f"{option_str}")
 
     """
@@ -79,9 +91,14 @@ class Poll(commands.Cog):
         else:
             poll_options = self.options
         for option in poll_options:
-            description += '\n {} {}'.format(self.reactions[count], option)
+            if isinstance(option, dict):
+                description += '\n {} {}'.format(self.reactions[count],
+                                                  option["name"])
+            else:
+                description += '\n {} {}'.format(self.reactions[count],
+                                                  option)
             count += 1
-        print(description)
+        print(f"desc {description}")
         embed = discord.Embed(title=self.event.get_title_poll(),
                               description=''.join(description))
         message = await ctx.send(embed=embed)
@@ -101,13 +118,16 @@ class Poll(commands.Cog):
         winners = []
         message = await ctx.fetch_message(self.event.get_id())
         embed_desc = message.embeds[0].description.strip()
-        embed_desc = embed_desc.replace("\n", "")
+        # embed_desc = embed_desc.replace("\n", "")
         print(embed_desc)
-        temp_list = embed_desc.split(" ")
+        temp_list = embed_desc.splitlines()
+        temp_list = [x.strip() for x in temp_list]
+        print(temp_list)
+        print(temp_list[0][0:1])
+        # temp_list = re.split("1⃣'2⃣'3⃣'4⃣'5⃣'", embed_desc)
         # print(temp_list)
-        options = {temp_list[x]: temp_list[x + 1] for x in range(0, len(
-            temp_list), 2)}
-        print(options)
+        options = {temp_list[x][0:2]: temp_list[x][2:] for x in range(0, len(
+            temp_list))}
         for reaction in message.reactions:
             # print(reaction)
             # print(reaction.emoji)
@@ -115,12 +135,14 @@ class Poll(commands.Cog):
                 reacters = await reaction.users().flatten()
                 votes[reaction.emoji] = len(reacters)
                 # print(reaction)
-                # print(reacters)
+
+        print(votes)
         max_value = max(votes.values())
+        print(max_value)
         max_keys = [key for key, value in votes.items() if value == max_value]
         for i, j in options.items():
             if i in max_keys:
-                winners.append(j)
+                winners.append(j.strip())
         await self.show_results(ctx, winners)
 
     """
@@ -130,7 +152,8 @@ class Poll(commands.Cog):
     async def count_votes_manual(self, ctx, poll_id):
         votes = {}
         winners = []
-        message = await ctx.fetch_message(self.events[0].get_id())
+        message = await ctx.fetch_message(self.self.event.get_id())
+        print(message)
         embed_desc = message.embeds[0].description.strip()
         embed_desc = embed_desc.replace("\n", "")
         print(embed_desc)
@@ -163,17 +186,36 @@ class Poll(commands.Cog):
         else:
             self.event.set_winner(winners[0])
             print(winners[0])
-            print(self.event.get_winner())
             embed = discord.Embed(title="Poll finished",
                                   description=self.event.get_title_results())
+            for option in self.options:
+                print(option)
+                if isinstance(option, dict) and option["name"] == winners[0]:
+                    embed = self.yelp_embed(option, embed)
+            print(self.event.get_winner())
             await ctx.send(embed=embed)
-        await self.set_reminder(ctx)
+        await self.set_reminder(ctx, embed)
+
+    """
+    Adds fields if option is an yelp option.
+    """
+    def yelp_embed(self, business, embed):
+        # embed = discord.Embed(title=business["name"],
+        #                       description=self.event.get_title_results())
+        embed.set_image(url=business["image"])
+        embed.add_field(name="Name", value=business["name"],
+                        inline=True)
+        embed.add_field(name="Link", value=business["url"],
+                        inline=True)
+        embed.add_field(name="Address", value=business["address"],
+                        inline=True)
+        return embed
 
     """
     Sets the reminder for lunch
     """
     @commands.command()
-    async def set_reminder(self, ctx):
+    async def set_reminder(self, ctx, embed):
         if self.event is None:
             await ctx.send("No poll created")
             return
@@ -183,19 +225,18 @@ class Poll(commands.Cog):
         # curr = datetime.strftime(datetime.now(), form)
         print(datetime.now())
         print(timedelta(0, 10))
-        curr = datetime.now() + timedelta(0, 10)
+        curr = datetime.now() #+ timedelta(0, 10*60)
         print(curr)
         print(alarm)
         # diff = datetime.strptime(curr)
         t1 = datetime.strptime(alarm, "%H:%M")
         t2 = datetime.strptime(datetime.now().strftime("%H:%M"), "%H:%M")
-        diff = (t1 - t2).total_seconds()
-        print(diff)
+        diff = (t1 - t2).total_seconds() - 10 * 60
+        print(f"diff {diff}")
         time.sleep(diff)
         print("reminder")
         print(self.event.get_title_results())
-        embed = discord.Embed(title="Reminder",
-                              description=self.event.get_title_results())
+        embed.title = "Reminder"
         await ctx.send(embed=embed)
 
 
